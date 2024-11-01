@@ -1,0 +1,75 @@
+version: '3.8'
+
+services:
+    php:
+        build:
+            context: .
+            dockerfile: docker/php/Dockerfile
+        container_name: pollution-monitor-php
+        volumes:
+            - ./:/pollution-monitor-app
+        networks:
+            - pollution-monitor-network
+        command: |
+            sh -c "composer install && php-fpm"
+
+    nginx:
+        image: nginx:latest
+        container_name: pollution-monitor-nginx
+        ports:
+            - "8008:80"
+        volumes:
+            - ./:/pollution-monitor-app
+            - ./docker/nginx/nginx.conf:/etc/nginx/conf.d/default.conf
+        depends_on:
+            - php
+        networks:
+            - pollution-monitor-network
+
+    db:
+        image: postgres:15
+        container_name: pollution-monitor-db
+        environment:
+            POSTGRES_DB: ${DB_DATABASE}
+            POSTGRES_USER: ${DB_USERNAME}
+            POSTGRES_PASSWORD: ${DB_PASSWORD}
+        volumes:
+            - pgdata:/var/lib/postgresql/data
+        networks:
+            - pollution-monitor-network
+        ports:
+            - "5438:5432"
+
+    redis:
+        image: redis:alpine
+        container_name: pollution-monitor-redis
+        networks:
+            - pollution-monitor-network
+
+    loki:
+        image: grafana/loki:2.9.1
+        container_name: pollution-monitor-loki
+        ports:
+            - "3102:3102"
+        networks:
+            - pollution-monitor-network
+        command: -config.file=/etc/loki/local-config.yaml
+
+    grafana:
+        image: grafana/grafana:latest
+        container_name: pollution-monitor-grafana
+        ports:
+            - "3002:3002"
+        environment:
+            GF_SECURITY_ADMIN_USER: ${GF_USERNAME}
+            GF_SECURITY_ADMIN_PASSWORD: ${GF_PASSWORD}
+        depends_on:
+            - loki
+        networks:
+            - pollution-monitor-network
+
+networks:
+    pollution-monitor-network:
+
+volumes:
+    pgdata:
