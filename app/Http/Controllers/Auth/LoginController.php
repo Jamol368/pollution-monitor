@@ -7,11 +7,27 @@ use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\LogoutRequest;
 use App\Services\Auth\LoginService;
 use App\Services\Auth\LogoutService;
+use Illuminate\Support\Facades\Http;
 
 class LoginController extends Controller
 {
     public function showLoginForm(): \Illuminate\Contracts\View\View|\Illuminate\Contracts\View\Factory|\Illuminate\Foundation\Application
     {
+        $logData = [
+            'streams' => [
+                [
+                    'stream' => ['app' => 'laravel'],
+                    'values' => [
+                        [ (string) (time() * 1e9), json_encode(['message' => 'Manual test log']) ]
+                    ],
+                ],
+            ],
+        ];
+
+        $response = Http::withHeaders([
+            'Content-Type' => 'application/json'
+        ])->post('http://loki:3100/loki/api/v1/push', $logData);
+
         return view('auth.login');
     }
 

@@ -50,16 +50,17 @@ services:
         image: grafana/loki:2.9.1
         container_name: pollution-monitor-loki
         ports:
-            - "3102:3102"
+            - "3102:3100"
         networks:
             - pollution-monitor-network
-        command: -config.file=/etc/loki/local-config.yaml
+        volumes:
+            - ./docker/loki/loki-config.yaml:/etc/loki/loki.yaml
 
     grafana:
         image: grafana/grafana:latest
         container_name: pollution-monitor-grafana
         ports:
-            - "3002:3002"
+            - "3002:3000"
         environment:
             GF_SECURITY_ADMIN_USER: ${GF_USERNAME}
             GF_SECURITY_ADMIN_PASSWORD: ${GF_PASSWORD}

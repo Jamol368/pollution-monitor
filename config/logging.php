@@ -1,9 +1,13 @@
 <?php
 
+use Itspire\MonologLoki\Formatter\LokiFormatter;
+use Itspire\MonologLoki\Handler\LokiHandler;
 use Monolog\Handler\NullHandler;
 use Monolog\Handler\StreamHandler;
 use Monolog\Handler\SyslogUdpHandler;
 use Monolog\Processor\PsrLogMessageProcessor;
+use Monolog\Formatter\JsonFormatter;
+use Monolog\Handler;
 
 return [
 
@@ -125,6 +129,12 @@ return [
 
         'emergency' => [
             'path' => storage_path('logs/laravel.log'),
+        ],
+        'loki' => [
+            'driver' => 'custom',
+            'via'    => App\Logging\LokiLogger::class,
+            'level'  => 'debug',
+            'host'   => env('LOKI_HOST', 'http://loki:3100'),
         ],
     ],
 
